@@ -1,0 +1,35 @@
+define
+
+#attributes
+dayMonthYear sub attribute, datatype string; #needs to be LocalDateTime?
+hour sub attribute, datatype long;
+data sub attribute, datatype string;
+
+#entities
+Date sub entity,
+    has dayMonthYear,
+    plays has_time,
+    plays has_most_recent_thing;
+
+Time sub entity,
+    has hour,
+    plays is_time,
+    plays has_thing;
+
+Thing sub entity,
+    has data,
+    plays is_thing,
+    plays is_most_recent_thing;
+
+#relationships
+time_relation sub relation,
+    relates is_time,
+    relates has_time;
+
+thing_relation sub relation,
+    relates is_thing,
+    relates has_thing;
+
+most_recent_thing_relation sub relation,
+    relates is_most_recent_thing,
+    relates has_most_recent_thing;

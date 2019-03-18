@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.system.id="Blaze" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../..">
+      <sourceFolder url="file://$MODULE_DIR$/../../.." isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../bazel-bazel" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../bazel-bin" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../bazel-genfiles" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../bazel-out" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../bazel-testlogs" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="libnd4j-native-platform-independent_9d0bee71" level="project" />
+    <orderEntry type="library" name="libnd4j-api_885f270" level="project" />
+    <orderEntry type="library" name="org-nd4j-nd4j-api-ijar_11bffff0" level="project" />
+    <orderEntry type="library" name="org-nd4j-nd4j-native-api-ijar_aed6a7a8" level="project" />
+    <orderEntry type="library" name="libnd4j-native-jar-macosx-x86-64_885f270" level="project" />
+    <orderEntry type="library" name="libjunit_e854e455" level="project" />
+    <orderEntry type="library" name="libnd4j-native_885f270" level="project" />
+    <orderEntry type="library" name="junit-junit-ijar_bed373b0" level="project" />
+    <orderEntry type="library" name="org-nd4j-nd4j-native-ijar_ae77478e" level="project" />
+    <orderEntry type="library" name="libnd4j-native-api_885f270" level="project" />
+    <orderEntry type="library" name="org-nd4j-nd4j-native-jar-macosx-x86_64-ijar_e13cb1ee" level="project" />
+  </component>
+</module>

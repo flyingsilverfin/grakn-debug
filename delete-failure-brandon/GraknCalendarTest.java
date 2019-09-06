@@ -2,6 +2,7 @@ package test;
 
 import grakn.core.client.GraknClient;
 import grakn.core.concept.answer.ConceptMap;
+import grakn.core.concept.answer.ConceptSet;
 import graql.lang.Graql;
 import graql.lang.query.GraqlGet;
 import graql.lang.query.GraqlQuery;
@@ -20,7 +21,7 @@ class GraknCalendarTest {
 
     private static final String host = "localhost";
     private static final int port = 48555;
-    private static final String keyspace = "grakn";
+    private static final String keyspace = "grakn3";
 
     public static void main(String[] args) throws FileNotFoundException {
         GraknClient client = new GraknClient(host + ":" + port);
@@ -39,7 +40,7 @@ class GraknCalendarTest {
         for (int i = 0; i < 2; i++) {
             Date date = new Date();
             int hour = 1;
-            insertThing(session, date.toString(), hour);
+            insertThing(tx, date.toString(), hour);
         }
         System.out.println("Inserted things");
 
@@ -50,8 +51,7 @@ class GraknCalendarTest {
         client.close();
     }
 
-    private static void insertThing(GraknClient.Session session, String date, int hour) {
-        GraknClient.Transaction tx = session.transaction().write();
+    private static void insertThing(GraknClient.Transaction tx, String date, int hour) {
         //get/create Date
         StatementInstance dateStatement = var("d").isa("Date").has("dayMonthYear", date);
         GraqlGet match = Graql.match(dateStatement).get("d");
@@ -64,6 +64,7 @@ class GraknCalendarTest {
         } else {
             dateId = answer.get(0).get("d").asEntity().id().getValue();
         }
+        System.out.println("dateId: " + dateId);
 
         //get/create time
         Statement[] timeStatements = new Statement[]{
@@ -81,6 +82,8 @@ class GraknCalendarTest {
             timeId = answer.get(0).get("t").asEntity().id().getValue();
         }
 
+        System.out.println("timeId: " + timeId);
+
         //insert thing
         String thingId = tx.execute(Graql.insert(
                 var("x").isa("Thing"),
@@ -89,13 +92,18 @@ class GraknCalendarTest {
                         .isa("thing_relation")
         )).get(0).get("x").asEntity().id().getValue();
 
+        System.out.println("thingId: " + thingId);
+
         //update most recent thing
-        tx.execute(Graql.match(
+        List<ConceptSet> execute = tx.execute(Graql.match(
                 var("d").id(dateId),
                 var("t").isa("Thing"),
                 var("m").rel("has_most_recent_thing", var("d")).rel("is_most_recent_thing",
                         var("t")).isa("most_recent_thing_relation")
         ).delete("m"));
+        for (ConceptSet conceptSet : execute) {
+            System.out.println(conceptSet.set());
+        }
 
         String mostRecentThing = tx.execute(Graql.insert(
                 var("d").id(dateId),

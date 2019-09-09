@@ -1,0 +1,86 @@
+define
+#Attributes
+#sentence attributes
+sentence-type sub attribute,
+  datatype string;
+sentence-location sub attribute,    #"NUMBER" field in SEMMED db
+  datatype long;
+sentence-text sub attribute,
+  datatype string;
+section-header sub attribute,
+  datatype string;
+normalized-section-header sub attribute,
+  datatype string;
+sentence-id sub attribute,
+  datatype long;
+pmid sub attribute,
+  datatype string;
+derivation-date sub attribute,
+  datatype date;
+sentence-start-index sub attribute,
+  datatype long;
+sentence-end-index sub attribute,
+  datatype long;
+#Detected-entity attributes
+index-start sub attribute,
+  datatype string;
+index-end sub attribute,
+  datatype string;
+lemma sub attribute,
+  datatype string;
+score sub attribute,
+  datatype string;
+entity-type sub attribute,
+  datatype string;
+semantic-type sub attribute,
+  datatype string;
+name sub attribute,
+  datatype string;
+cui sub attribute,
+  datatype string;
+novelty sub attribute,
+  datatype boolean;
+#Predicate attributes
+predicate-name sub attribute,
+  datatype string;
+predication-id sub attribute,
+  datatype long;
+###Entities
+sentence sub entity,
+  plays mined-from,
+  has sentence-id,
+  has pmid,
+  has derivation-date,
+  has sentence-type,
+  has sentence-location,  #NUMBER
+  has sentence-text,
+  has section-header,
+  has normalized-section-header,
+  has sentence-start-index,
+  has sentence-end-index 
+  ;
+detected-entity sub entity,
+  # plays proposed-object,
+  # plays proposed-subject,
+  has index-start,
+  has index-end,
+  has lemma,
+  has score,
+  has entity-type,            #subject vs object
+  has semantic-type,          #e.g. "orga"
+  has name,
+  has cui,
+  has novelty;          
+  #derived-subject sub detected-entity,
+  subject sub detected-entity,
+    plays predication-subject;
+  # derived-object sub detected-entity,
+  object sub detected-entity,
+    plays predication-object;
+# predicate-mining sub relation,
+predicate sub relation,
+  relates mined-from,
+  relates predication-object,
+  relates predication-subject,
+  has predicate-name,            #AFFECTS
+  has predication-id;

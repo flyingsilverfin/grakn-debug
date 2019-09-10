@@ -143,6 +143,7 @@ def init(start_index, chunk_size):
     attributes_with_types = fetch_unique_attributes(mydb, start_index, end_index)
     print("Creating insert attribute queries...")
     graql_insert_attribute_queries = insert_attribute_queries(attributes_with_types)
+    print("Total attribute insert queries: {0}".format(len(graql_insert_attribute_queries)))
 
     print("Start attribute loading...")
     attribute_load_start = datetime.datetime.now()
@@ -167,6 +168,7 @@ def init(start_index, chunk_size):
     sql_data = mycursor.fetchall()
     print("Creating graql insert queries...")
     all_queries = [graql_insert_sentence_query(sql_entity) for sql_entity in sql_data]
+    print("Total sentence insert queries: {0}".format(len(all_queries)))
 
     chunk_size = int(len(all_queries) / cpu_count)
     queries_chunks = split_chunks(all_queries, chunk_size)

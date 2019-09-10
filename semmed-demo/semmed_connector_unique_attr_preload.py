@@ -90,8 +90,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
         "SENTENCE": "sentence-text"
     }
 
-    sql_attr_query = "SELECT DISTINCT {0} WHERE SENTENCE_ID < " + str(end_index) + " AND SENTENCE_ID >= " + str(
-        start_index)
+    sql_attr_query = "SELECT DISTINCT {0} FROM SENTENCE WHERE SENTENCE_ID < " + str(end_index) + " AND SENTENCE_ID >= " + str( start_index) + ";"
     for sql_attribute in sql_to_grakn_attributes:
 
         grakn_attribute_type = sql_to_grakn_attributes[sql_attribute]

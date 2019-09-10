@@ -94,12 +94,14 @@ def fetch_unique_attributes(mydb, start_index, end_index):
 
 def insert_attribute_queries(attribute_type_pairs):
     queries = []
+    counter = 0
     for attr_type, attr_value in attribute_type_pairs:
+        counter += 1
         attr_value = attr_value[0]
         if type(attr_value) == str:
-            queries.append('insert $x "{0}" isa {1};'.format(attr_value.replace('"', "'"), attr_type))
+            queries.append('insert $x{2} "{0}" isa {1};'.format(attr_value.replace('"', "'"), attr_type, counter))
         else:
-            queries.append('insert $x {0} isa {1};'.format(attr_value, attr_type))
+            queries.append('insert $x{2} {0} isa {1};'.format(attr_value, attr_type, counter))
 
     return queries
 
@@ -151,7 +153,13 @@ def init(start_index, chunk_size):
     query_chunks = split_chunks(graql_insert_attribute_queries, chunk_size)
     processes = []
     for i in range(cpu_count):
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(query_chunks[i], i, 10000))
+        # batch together 5 simple attribute insert queries at once to reduce number of round trips
+        chunk = query_chunks[i]
+        batched_chunk = []
+        batch_size = 10
+        for j in range(0, len(chunk), batch_size):
+            batched_chunk.append(" ".join(chunk[j: min(len(chunk), j + batch_size)]))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(batched_chunk, i, 1000))
         process.start()
         processes.append(process)
 

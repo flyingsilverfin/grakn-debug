@@ -163,7 +163,10 @@ def init(start_index, chunk_size, concurrency=None):
         batched_chunk = []
         batch_size = 10
         for j in range(0, len(chunk), batch_size):
-            batched_chunk.append(" ".join(chunk[j: min(len(chunk), j + batch_size)]))
+            merged = " ".join(chunk[j: min(len(chunk), j + batch_size)])
+            merged.replace("insert", "")
+            merged = "insert " + merged
+            batched_chunk.append(merged)
         process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(batched_chunk, i, 1000))
         process.start()
         processes.append(process)

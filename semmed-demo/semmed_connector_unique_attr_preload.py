@@ -112,7 +112,7 @@ def insert_attribute_queries(attribute_type_pairs):
     for attr_type, attr_value in attribute_type_pairs:
         attr_value = attr_value[0]
         if type(attr_value) == str:
-            queries.append('insert $x "{0}" isa {1};'.format(attr_value, attr_type))
+            queries.append('insert $x "{0}" isa {1};'.format(attr_value.replace('"', "'"), attr_type))
         else:
             queries.append('insert $x {0} isa {1};'.format(attr_value, attr_type))
 

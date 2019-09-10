@@ -123,9 +123,9 @@ def init(start_index, chunk_size, concurrency=None):
     end_index = int(start_index) + int(chunk_size)
 
     if concurrency is None:
-        cpu_count = multiprocessing.cpu_count()
+        cpu_count = int(multiprocessing.cpu_count())
     else:
-        cpu_count = concurrency
+        cpu_count = int(concurrency)
 
     print("start_index: " + str(start_index))
     print("chunk_size: " + str(chunk_size))

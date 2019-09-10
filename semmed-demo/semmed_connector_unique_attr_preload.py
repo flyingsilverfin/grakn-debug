@@ -43,6 +43,7 @@ def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000
             count = 1
             for query in queries:
                 tx.query(query)
+                count += 1
                 if count % query_commit_batch_size == 0:
                     tx.commit()
                     tx = session.transaction().write()

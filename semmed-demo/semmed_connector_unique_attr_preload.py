@@ -110,7 +110,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
 def insert_attribute_queries(attribute_type_pairs):
     queries = []
     for attr_type, attr_value in attribute_type_pairs:
-        queries.append("insert $x \"{0}\" isa {1};".format(str(attr_value), attr_type))
+        queries.append('insert $x "{0}" isa {1};'.format(str(attr_value[0]), attr_type))
     return queries
 
 

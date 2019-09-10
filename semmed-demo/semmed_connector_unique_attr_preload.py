@@ -40,31 +40,15 @@ def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000
     with GraknClient(uri=uri) as client:
         with client.session(keyspace=keyspace) as session:
             tx = session.transaction().write()
-            for index, query in enumerate(queries):
+            count = 1
+            for query in queries:
                 tx.query(query)
-                if index % query_commit_batch_size == 0:
+                if count % query_commit_batch_size == 0:
                     tx.commit()
                     tx = session.transaction().write()
-                    print("------------ Process:", process_id, "------", index, "data commited")
+                    print("------------ Process:", process_id, "------", count, "data commited")
             tx.commit()
 
-
-def load_to_grakn(sentences_list, process_id):
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
-            tx = session.transaction().write()
-
-            iterator = 1
-            for entity in sentences_list:
-                query = graql_insert_sentence_query(entity)
-                tx.query(query)
-
-                iterator += 1
-
-                if iterator % 1000 == 0:
-                    tx.commit()
-                    tx = session.transaction().write()
-                    print("------------ Process:", process_id, "------", iterator, "data commited")
 
 
 """

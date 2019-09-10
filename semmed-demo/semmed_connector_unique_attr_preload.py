@@ -118,10 +118,15 @@ def split_chunks(data_list, chunk_size):
     return chunks
 
 
-def init(start_index, chunk_size):
+def init(start_index, chunk_size, concurrency=None):
     start_time = datetime.datetime.now()
     end_index = int(start_index) + int(chunk_size)
-    cpu_count = multiprocessing.cpu_count()
+
+    if concurrency is None:
+        cpu_count = multiprocessing.cpu_count()
+    else:
+        cpu_count = concurrency
+
     print("start_index: " + str(start_index))
     print("chunk_size: " + str(chunk_size))
     print("end_index: " + str(end_index))
@@ -185,7 +190,7 @@ def init(start_index, chunk_size):
     processes = []
     print("Insert into grakn...")
     for i in range(cpu_count):
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(queries_chunks[i], i, 2000))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(queries_chunks[i], i, 4000))
         process.start()
         processes.append(process)
 
@@ -206,4 +211,5 @@ def init(start_index, chunk_size):
 if __name__ == "__main__":
     start_index = sys.argv[1]
     chunk_size = sys.argv[2]
-    init(start_index, chunk_size)
+    concurrency = sys.argv[3]
+    init(start_index, chunk_size, concurrency)

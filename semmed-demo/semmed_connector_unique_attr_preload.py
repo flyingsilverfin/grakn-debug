@@ -79,21 +79,21 @@ def fetch_unique_attributes(mydb, start_index, end_index):
     attributes = []
 
     sql_to_grakn_attributes = {
-        "SENTENCE_ID": ("sentence-id", int),
-        "PMID": ("pmid", str),
-        "TYPE": ("sentence-type", str),
-        "NUMBER": ("sentence-location", int),
-        "SENT_START_INDEX": ("sentence-start-index", int),
-        "SENT_END_INDEX": ("sentence-end-index", int),
-        "SECTION_HEADER": ("section-header", str),
-        "NORMALIZED_SECTION_HEADER": ("normalised-section-header", str),
-        "SENTENCE": ("sentence-text", str)
+        "SENTENCE_ID": "sentence-id",
+        "PMID": "pmid",
+        "TYPE": "sentence-type",
+        "NUMBER": "sentence-location",
+        "SENT_START_INDEX": "sentence-start-index",
+        "SENT_END_INDEX": "sentence-end-index",
+        "SECTION_HEADER": "section-header",
+        "NORMALIZED_SECTION_HEADER": "normalised-section-header",
+        "SENTENCE": "sentence-text"
     }
 
     sql_attr_query = "SELECT DISTINCT {0} FROM SENTENCE WHERE SENTENCE_ID < " + str(end_index) + " AND SENTENCE_ID >= " + str( start_index) + ";"
     for sql_attribute in sql_to_grakn_attributes:
 
-        grakn_attribute_type, datatype = sql_to_grakn_attributes[sql_attribute]
+        grakn_attribute_type = sql_to_grakn_attributes[sql_attribute]
 
         sql_query = sql_attr_query.format(sql_attribute)
         print(sql_query)
@@ -102,7 +102,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
         unique_attributes = cursor.fetchall()
 
         for unique_attribute in unique_attributes:
-            attributes.append((grakn_attribute_type, datatype(unique_attribute)))
+            attributes.append((grakn_attribute_type, unique_attribute))
 
     return attributes
 
@@ -110,7 +110,12 @@ def fetch_unique_attributes(mydb, start_index, end_index):
 def insert_attribute_queries(attribute_type_pairs):
     queries = []
     for attr_type, attr_value in attribute_type_pairs:
-        queries.append('insert $x "{0}" isa {1};'.format(str(attr_value[0]), attr_type))
+        attr_value = attr_value[0]
+        if type(attr_value) == str:
+            queries.append('insert $x "{0}" isa {1};'.format(attr_value, attr_type))
+        else:
+            queries.append('insert $x {0} isa {1};'.format(attr_value, attr_type))
+
     return queries
 
 

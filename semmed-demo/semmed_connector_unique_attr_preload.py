@@ -96,6 +96,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
         grakn_attribute_type = sql_to_grakn_attributes[sql_attribute]
 
         sql_query = sql_attr_query.format(sql_attribute)
+        print(sql_query)
 
         unique_attributes = cursor.execute(sql_query).fetchall()
 

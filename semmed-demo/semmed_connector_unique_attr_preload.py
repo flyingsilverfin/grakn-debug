@@ -86,7 +86,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
         "SENT_START_INDEX": "sentence-start-index",
         "SENT_END_INDEX": "sentence-end-index",
         "SECTION_HEADER": "section-header",
-        "NORMALIZED_SECTION_HEADER": "normalised-section-header",
+        "NORMALIZED_SECTION_HEADER": "normalized-section-header",
         "SENTENCE": "sentence-text"
     }
 

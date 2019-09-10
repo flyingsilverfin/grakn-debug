@@ -149,7 +149,7 @@ def init(start_index, chunk_size):
     query_chunks = split_chunks(graql_insert_attribute_queries, chunk_size)
     processes = []
     for i in range(cpu_count):
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(query_chunks[i], i))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(query_chunks[i], i, 10000))
         process.start()
         processes.append(process)
 
@@ -172,8 +172,9 @@ def init(start_index, chunk_size):
 
     insert_sentences_start = datetime.datetime.now()
     processes = []
+    print("Insert into grakn...")
     for i in range(cpu_count):
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(queries_chunks[i], i))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(queries_chunks[i], i, 2000))
         process.start()
         processes.append(process)
 

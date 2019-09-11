@@ -8,7 +8,7 @@ uri = "localhost:48555"
 keyspace = "semmed_big"
 
 
-def graql_insert_sentence_query(semmed_entity):
+def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
     sentence_id = semmed_entity[0]
     pmid = semmed_entity[1]
     sentence_type = semmed_entity[2]
@@ -19,30 +19,43 @@ def graql_insert_sentence_query(semmed_entity):
     normalized_section_header = semmed_entity[7].replace('"', "'")
     sentence_text = semmed_entity[8].replace('"', "'")
 
+    sentence_id_concept_id = attr_type_value_to_id[("sentence-id", sentence_id)]
+    pmid_id = attr_type_value_to_id[("pmid", pmid)]
+    sentence_type_id = attr_type_value_to_id[("sentence-type", sentence_type)]
+    sentence_location_id = attr_type_value_to_id[("sentence-location", sentence_location)]
+    sentence_start_index_id = attr_type_value_to_id[("sentence-start-index", sentence_start_index)]
+    sentence_end_index_id = attr_type_value_to_id[("sentence-end-index", sentence_end_index)]
+    section_header_id = attr_type_value_to_id[("section-header", section_header)]
+    normalized_section_header_id = attr_type_value_to_id[("normalized-section-header", normalized_section_header)]
+    sentence_text_id = attr_type_value_to_id[("sentence-text", sentence_text)]
+
 
     grakn_insert_query = (
-        'insert '
-        '$s isa sentence, has sentence-id ' + str(sentence_id) +
-        ', has pmid \"' + str(pmid) + "\""
-        ', has sentence-type \"' + str(sentence_type) + '\"'
-        ', has sentence-location ' + str(sentence_location) +
-        ', has sentence-start-index ' + str(sentence_start_index) +
-        ', has sentence-end-index ' + str(sentence_end_index) +
-        ', has section-header \"' + str(section_header) + '\"' 
-        ', has normalized-section-header \"' + str(normalized_section_header) + '\"'
-        ', has sentence-text \"' + str(sentence_text) + '\"'
-        ';')
+        'insert ' +
+        '$s isa sentence, has $a0, $a1, $a2, $a3, $a4, $a5, $a6, $a7, $a8; ' +
+        '$a0 id {0}; $a1 id {1}; $a2 id {2}; $a3 id {3}; $a4 id {4}; $a5 id {5}; $a6 id {6}; $a7 id {7}; $a8 id {8}; '.format(
+            sentence_id_concept_id, pmid_id, sentence_type_id, sentence_location_id, sentence_start_index_id,
+            sentence_end_index_id, section_header_id, normalized_section_header_id, sentence_text_id)
+    )
 
     return grakn_insert_query
 
 
-def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000):
+def grakn_insert_queries_batch(queries, process_id, variable_type_value_map, attr_type_value_to_id, query_commit_batch_size=1000):
     with GraknClient(uri=uri) as client:
         with client.session(keyspace=keyspace) as session:
             tx = session.transaction().write()
             count = 1
             for query in queries:
-                tx.query(query)
+                answer_iterator = tx.query(query)
+                concept_map = next(answer_iterator).map()
+                for variable in concept_map:
+                    concept = concept_map[variable]
+                    concept_id = concept.id
+
+                    type_value = variable_type_value_map[variable]
+                    attr_type_value_to_id[type_value] = concept_id
+
                 count += 1
                 if count % query_commit_batch_size == 0:
                     tx.commit()
@@ -94,16 +107,19 @@ def fetch_unique_attributes(mydb, start_index, end_index):
 
 def insert_attribute_queries(attribute_type_pairs):
     queries = []
+    variable_type_value_mapping = {}
     counter = 0
     for attr_type, attr_value in attribute_type_pairs:
         counter += 1
         attr_value = attr_value[0]
         if type(attr_value) == str:
-            queries.append('insert $x{2} "{0}" isa {1};'.format(attr_value.replace('"', "'"), attr_type, counter))
+            attr_value = attr_value.replace('"', "'")
+            queries.append('insert $x{2} "{0}" isa {1};'.format(attr_value, attr_type, counter))
         else:
             queries.append('insert $x{2} {0} isa {1};'.format(attr_value, attr_type, counter))
+        variable_type_value_mapping["x{0}".format(counter)] = (attr_type, attr_value)
 
-    return queries
+    return queries, variable_type_value_mapping
 
 
 def split_chunks(data_list, chunk_size):
@@ -149,7 +165,7 @@ def init(start_index, chunk_size, concurrency=None):
     print("Fetching unique attributes from sql...")
     attributes_with_types = fetch_unique_attributes(mydb, start_index, end_index)
     print("Creating insert attribute queries...")
-    graql_insert_attribute_queries = insert_attribute_queries(attributes_with_types)
+    graql_insert_attribute_queries, variable_type_value_mapping = insert_attribute_queries(attributes_with_types)
     print("Total attribute insert queries: {0}".format(len(graql_insert_attribute_queries)))
 
     print("Start attribute loading...")
@@ -157,6 +173,11 @@ def init(start_index, chunk_size, concurrency=None):
     chunk_size = int(len(graql_insert_attribute_queries) / cpu_count)
     query_chunks = split_chunks(graql_insert_attribute_queries, chunk_size)
     processes = []
+
+    # create a shared map between the processes
+    manager = multiprocessing.Manager()
+    attr_type_value_to_id = manager.dict()
+
     for i in range(cpu_count):
         # batch together 5 simple attribute insert queries at once to reduce number of round trips
         chunk = query_chunks[i]
@@ -167,7 +188,7 @@ def init(start_index, chunk_size, concurrency=None):
             merged = merged.replace("insert", "")
             merged = "insert " + merged
             batched_chunk.append(merged)
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(batched_chunk, i, 1000))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(batched_chunk, i, variable_type_value_mapping, attr_type_value_to_id, 1000))
         process.start()
         processes.append(process)
 
@@ -183,7 +204,7 @@ def init(start_index, chunk_size, concurrency=None):
     mycursor.execute("SELECT * FROM SENTENCE WHERE SENTENCE_ID <" + str(end_index) + " AND SENTENCE_ID >= " + str(start_index))
     sql_data = mycursor.fetchall()
     print("Creating graql insert queries...")
-    all_queries = [graql_insert_sentence_query(sql_entity) for sql_entity in sql_data]
+    all_queries = [graql_insert_sentence_query(sql_entity, attr_type_value_to_id) for sql_entity in sql_data]
     print("Total sentence insert queries: {0}".format(len(all_queries)))
 
     chunk_size = int(len(all_queries) / cpu_count)
@@ -193,7 +214,7 @@ def init(start_index, chunk_size, concurrency=None):
     processes = []
     print("Insert into grakn...")
     for i in range(cpu_count):
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(queries_chunks[i], i, 4000))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(queries_chunks[i], i, 500))
         process.start()
         processes.append(process)
 

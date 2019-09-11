@@ -41,7 +41,7 @@ def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
     return grakn_insert_query
 
 
-def grakn_insert_queries_batch(queries, process_id, variable_type_value_map, attr_type_value_to_id, query_commit_batch_size=1000):
+def grakn_insert_queries_batch_collect(queries, process_id, variable_type_value_map, attr_type_value_to_id, query_commit_batch_size=1000):
     with GraknClient(uri=uri) as client:
         with client.session(keyspace=keyspace) as session:
             tx = session.transaction().write()
@@ -63,6 +63,19 @@ def grakn_insert_queries_batch(queries, process_id, variable_type_value_map, att
                     print("------------ Process:", process_id, "------", count, "data commited")
             tx.commit()
 
+def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000):
+    with GraknClient(uri=uri) as client:
+        with client.session(keyspace=keyspace) as session:
+            tx = session.transaction().write()
+            count = 1
+            for query in queries:
+                answer_iterator = tx.query(query)
+                count += 1
+                if count % query_commit_batch_size == 0:
+                    tx.commit()
+                    tx = session.transaction().write()
+                    print("------------ Process:", process_id, "------", count, "data commited")
+            tx.commit()
 
 
 """
@@ -182,13 +195,13 @@ def init(start_index, chunk_size, concurrency=None):
         # batch together 5 simple attribute insert queries at once to reduce number of round trips
         chunk = query_chunks[i]
         batched_chunk = []
-        batch_size = 10
+        batch_size = 200
         for j in range(0, len(chunk), batch_size):
             merged = " ".join(chunk[j: min(len(chunk), j + batch_size)])
             merged = merged.replace("insert", "")
             merged = "insert " + merged
             batched_chunk.append(merged)
-        process = multiprocessing.Process(target=grakn_insert_queries_batch, args=(batched_chunk, i, variable_type_value_mapping, attr_type_value_to_id, 1000))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch_collect, args=(batched_chunk, i, variable_type_value_mapping, attr_type_value_to_id, 10))
         process.start()
         processes.append(process)
 

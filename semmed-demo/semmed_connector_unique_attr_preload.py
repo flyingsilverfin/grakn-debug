@@ -31,8 +31,8 @@ def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
 
 
     grakn_insert_query = (
-        'insert ' +
-        '$s isa sentence, has sentence-id $a0' +
+        'insert $s isa sentence' +
+        ', has sentence-id $a0' +
         ', has pmid $a1' +
         ', has sentence-type $a2' +
         ', has sentence-location $a3' +
@@ -40,7 +40,8 @@ def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
         ', has sentence-end-index $a5' +
         ', has sentence-header $a6' +
         ', has normalized-section-header $a7' +
-        ', has sentence-text $a8;'.format(
+        ', has sentence-text $a8;' +
+        ' $a0 id {0}; $a1 id {1}; $a2 id {2}; $a3 id {3}; $a4 id {4}; $a5 id {5}; $a6 id {6}; $a7 id {7}; $a8 id {8};'.format(
             sentence_id_concept_id, pmid_id, sentence_type_id, sentence_location_id, sentence_start_index_id,
             sentence_end_index_id, section_header_id, normalized_section_header_id, sentence_text_id)
     )

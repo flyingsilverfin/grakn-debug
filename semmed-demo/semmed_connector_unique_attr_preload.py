@@ -38,7 +38,7 @@ def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
         ', has sentence-location $a3' +
         ', has sentence-start-index $a4' +
         ', has sentence-end-index $a5' +
-        ', has sentence-header $a6' +
+        ', has section-header $a6' +
         ', has normalized-section-header $a7' +
         ', has sentence-text $a8;' +
         ' $a0 id {0}; $a1 id {1}; $a2 id {2}; $a3 id {3}; $a4 id {4}; $a5 id {5}; $a6 id {6}; $a7 id {7}; $a8 id {8};'.format(

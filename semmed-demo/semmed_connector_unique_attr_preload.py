@@ -50,10 +50,13 @@ def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
 
 
 def grakn_insert_queries_batch_collect(queries, process_id, variable_type_value_map, attr_type_value_to_id, query_commit_batch_size=1000):
+  
     with GraknClient(uri=uri) as client:
         with client.session(keyspace=keyspace) as session:
             tx = session.transaction().write()
             count = 1
+            concepts_inserted = 0
+
             for query in queries:
                 answer_iterator = tx.query(query)
                 concept_map = next(answer_iterator).map()
@@ -62,7 +65,11 @@ def grakn_insert_queries_batch_collect(queries, process_id, variable_type_value_
                     concept_id = concept.id
 
                     type_value = variable_type_value_map[variable]
+                    if type_value in attr_type_value_to_id:
+                        print("WARNING: {0} exists in ID mapping dict! From variable {1}.".format(type_value, variable))
+
                     attr_type_value_to_id[type_value] = concept_id
+                    concepts_inserted += 1
 
                 count += 1
                 if count % query_commit_batch_size == 0:
@@ -70,6 +77,7 @@ def grakn_insert_queries_batch_collect(queries, process_id, variable_type_value_
                     tx = session.transaction().write()
                     print("------------ Process:", process_id, "------", count, "data commited")
             tx.commit()
+            print("Cocnepts inserted in thread: {0}".format(concepts_inserted))
 
 def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000):
     with GraknClient(uri=uri) as client:
@@ -77,7 +85,6 @@ def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000
             tx = session.transaction().write()
             count = 1
             for query in queries:
-                print(count)
                 try:
                     answer_iterator = tx.query(query)
                 except Exception as e:
@@ -148,9 +155,9 @@ def insert_attribute_queries(attribute_type_pairs):
     return queries, variable_type_value_mapping
 
 
-def split_chunks(data_list, chunk_size):
+def split_chunks(data_list, n_chunks):
     chunks = []
-    n_chunks = int((len(data_list) - 1)/chunk_size) + 1
+    chunk_size = int(len(data_list)/n_chunks)
     for i in range(n_chunks):
         if i == n_chunks - 1:
             chunks.append(data_list[i * chunk_size:])
@@ -196,8 +203,8 @@ def init(start_index, chunk_size, concurrency=None):
 
     print("Start attribute loading...")
     attribute_load_start = datetime.datetime.now()
-    chunk_size = int(len(graql_insert_attribute_queries) / cpu_count)
-    query_chunks = split_chunks(graql_insert_attribute_queries, chunk_size)
+    query_chunks = split_chunks(graql_insert_attribute_queries, cpu_count)
+
     processes = []
 
     # create a shared map between the processes
@@ -208,13 +215,14 @@ def init(start_index, chunk_size, concurrency=None):
         # batch together 5 simple attribute insert queries at once to reduce number of round trips
         chunk = query_chunks[i]
         batched_chunk = []
-        batch_size = 200
+        batch_size = 400
         for j in range(0, len(chunk), batch_size):
-            merged = " ".join(chunk[j: min(len(chunk), j + batch_size)])
+            sub_chunk = chunk[j: min(len(chunk), j + batch_size)]
+            merged = " ".join(sub_chunk)
             merged = merged.replace("insert", "")
             merged = "insert " + merged
             batched_chunk.append(merged)
-        process = multiprocessing.Process(target=grakn_insert_queries_batch_collect, args=(batched_chunk, i, variable_type_value_mapping, attr_type_value_to_id, 10))
+        process = multiprocessing.Process(target=grakn_insert_queries_batch_collect, args=(batched_chunk, i, variable_type_value_mapping, attr_type_value_to_id, 5))
         process.start()
         processes.append(process)
 
@@ -233,8 +241,7 @@ def init(start_index, chunk_size, concurrency=None):
     all_queries = [graql_insert_sentence_query(sql_entity, attr_type_value_to_id) for sql_entity in sql_data]
     print("Total sentence insert queries: {0}".format(len(all_queries)))
 
-    chunk_size = int(len(all_queries) / cpu_count)
-    queries_chunks = split_chunks(all_queries, chunk_size)
+    queries_chunks = split_chunks(all_queries, cpu_count)
 
     insert_sentences_start = datetime.datetime.now()
     processes = []

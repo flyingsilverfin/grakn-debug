@@ -75,7 +75,7 @@ def grakn_insert_queries_batch_collect(queries, process_id, variable_type_value_
                 if count % query_commit_batch_size == 0:
                     tx.commit()
                     tx = session.transaction().write()
-                    print("------------ Process:", process_id, "------", count, "data commited")
+                    print("------------ Process:", process_id, "------", count, "queries commited")
             tx.commit()
             print("Cocnepts inserted in thread: {0}".format(concepts_inserted))
 
@@ -94,7 +94,7 @@ def grakn_insert_queries_batch(queries, process_id, query_commit_batch_size=1000
                 if count % query_commit_batch_size == 0:
                     tx.commit()
                     tx = session.transaction().write()
-                    print("------------ Process:", process_id, "------", count, "data commited")
+                    print("------------ Process:", process_id, "------", count, "queries commited")
             tx.commit()
 
 

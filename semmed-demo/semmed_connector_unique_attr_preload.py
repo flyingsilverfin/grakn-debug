@@ -178,14 +178,16 @@ def check_attribute_counts(attribute_type_value_pairs):
             tx = session.transaction().read()
             for t in types:
                 count = next(tx.query("compute count in {0};".format(t))).number()
-                assert count == type_counts[t], "Count for type `{0}` should be {1} but is: {2}".format(t, type_counts[t], count)
+                print("Count for type `{0}` should be: {1},  is: {2}".format(t, type_counts[t], count))
+                assert count == type_counts[t]
 
 def check_sentence_counts(exepcted_sentences):
     with GraknClient(uri=uri) as client:
         with client.session(keyspace=keyspace) as session:
             tx = session.transaction().read()
             count = next(tx.query("compute count in sentence;".format(t))).number()
-            assert count == exepcted_sentences, "Count for type `sentences` should be {1} but is: {2}".format(exepcted_sentences, count)
+            print("Count for type `sentences` should be {1} but is: {2}".format(exepcted_sentences, count))
+            assert count == exepcted_sentences
 
 def init(start_index, chunk_size, concurrency=None):
     start_time = datetime.datetime.now()

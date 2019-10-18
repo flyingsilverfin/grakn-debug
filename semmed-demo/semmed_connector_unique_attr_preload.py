@@ -166,6 +166,26 @@ def split_chunks(data_list, n_chunks):
 
     return chunks
 
+def check_attribute_counts(attribute_type_value_pairs):
+    type_occurences = [pair[0] for pair in attribute_type_value_pairs]
+    types = set(type_occurences)
+    type_counts = {}
+    for t in types:
+        type_counts[t] = type_occurences.count(t)
+
+    with GraknClient(uri=uri) as client:
+        with client.session(keyspace=keyspace) as session:
+            tx = session.transaction().read()
+            for t in types:
+                count = next(tx.query("compute count in {0};".format(t))).number()
+                assert count == type_counts[t], "Count for type `{0}` should be {1} but is: {2}".format(t, type_counts[t], count)
+
+def check_sentence_counts(exepcted_sentences):
+    with GraknClient(uri=uri) as client:
+        with client.session(keyspace=keyspace) as session:
+            tx = session.transaction().read()
+            count = next(tx.query("compute count in sentence;".format(t))).number()
+            assert count == exepcted_sentences, "Count for type `sentences` should be {1} but is: {2}".format(exepcted_sentences, count)
 
 def init(start_index, chunk_size, concurrency=None):
     start_time = datetime.datetime.now()
@@ -231,6 +251,8 @@ def init(start_index, chunk_size, concurrency=None):
 
     attribute_load_finish = datetime.datetime.now()
     print("Finished loading attributes\n")
+    
+    check_counts(attribute_with_types)
 
     # Create entities and ownerships of attributes
     print("Getting all rows from db...")
@@ -255,6 +277,8 @@ def init(start_index, chunk_size, concurrency=None):
         process.join()
 
     end_time = datetime.datetime.now()
+
+    check_sentence_counts(len(all_queries))
 
     print("- - - - - -")
 

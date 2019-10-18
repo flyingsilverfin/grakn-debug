@@ -252,7 +252,7 @@ def init(start_index, chunk_size, concurrency=None):
     attribute_load_finish = datetime.datetime.now()
     print("Finished loading attributes\n")
     
-    check_counts(attribute_with_types)
+    check_attribute_counts(attributes_with_types)
 
     # Create entities and ownerships of attributes
     print("Getting all rows from db...")

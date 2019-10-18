@@ -122,6 +122,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
     }
 
     # turns out DISTINCT is not case sensitive!! use hash first to handle all weird character cases too
+    # NOTE This still doesn't work - what happens when we hash ""? this leads to error: Count for type `section-header` should be: 3,  is: 0
     sql_attr_query = "SELECT DISTINCT(MD5({0})) FROM SENTENCE WHERE SENTENCE_ID < " + str(end_index) + " AND SENTENCE_ID >= " + str( start_index) + ";"
     for sql_attribute in sql_to_grakn_attributes:
 

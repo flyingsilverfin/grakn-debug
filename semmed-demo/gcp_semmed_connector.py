@@ -63,12 +63,12 @@ def load_to_grakn(sentences_list, process_id):
 
                 iterator += 1
 
-                if iterator % 1000 == 0:
+                if iterator % 400 == 0:
                     tx.commit()
                     tx = session.transaction().write()
                     print("------------ Process:", process_id, "------", iterator, "data commited")
 
-def init(start_index, chunk_size):
+def init(start_index, chunk_size, concurrency=None):
 
     start_time = datetime.datetime.now()
     end_index = int(start_index) + int(chunk_size)
@@ -111,7 +111,10 @@ def init(start_index, chunk_size):
 
 
     ####concurrent load
-    cpu_count = multiprocessing.cpu_count()
+    if concurrency is None:
+        cpu_count = multiprocessing.cpu_count()
+    else:
+        cpu_count = int(concurrency)
     #cpu_count = 1
 
     chunk_size = int(len(sqlData)/cpu_count)
@@ -147,5 +150,6 @@ def init(start_index, chunk_size):
 if __name__ == "__main__":
     start_index = sys.argv[1]
     chunk_size = sys.argv[2]
-    init(start_index, chunk_size)
+    concurrency = sys.argv[3]
+    init(start_index, chunk_size, concurrency)
 

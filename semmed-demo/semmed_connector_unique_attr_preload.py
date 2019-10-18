@@ -186,7 +186,7 @@ def check_sentence_counts(exepcted_sentences):
         with client.session(keyspace=keyspace) as session:
             tx = session.transaction().read()
             count = next(tx.query("compute count in sentence;")).number()
-            print("Count for type `sentences` should be {1} but is: {2}".format(exepcted_sentences, count))
+            print("Count for type `sentences` should be {0} but is: {1}".format(exepcted_sentences, count))
             assert count == exepcted_sentences
 
 def init(start_index, chunk_size, concurrency=None):

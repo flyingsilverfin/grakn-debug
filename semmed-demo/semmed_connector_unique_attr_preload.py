@@ -5,7 +5,7 @@ import datetime
 import sys
 
 uri = "localhost:48555"
-keyspace = "semmed_big"
+keyspace = "semmed"
 
 
 def graql_insert_sentence_query(semmed_entity, attr_type_value_to_id):
@@ -212,10 +212,10 @@ def init(start_index, chunk_size, concurrency=None):
     attr_type_value_to_id = manager.dict()
 
     for i in range(cpu_count):
-        # batch together 5 simple attribute insert queries at once to reduce number of round trips
+        # batch together simple attribute insert queries at once to reduce number of round trips
         chunk = query_chunks[i]
         batched_chunk = []
-        batch_size = 400
+        batch_size =  400
         for j in range(0, len(chunk), batch_size):
             sub_chunk = chunk[j: min(len(chunk), j + batch_size)]
             merged = " ".join(sub_chunk)

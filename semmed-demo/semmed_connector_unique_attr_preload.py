@@ -121,9 +121,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
         "SENTENCE": "sentence-text"
     }
 
-    # turns out DISTINCT is not case sensitive!! use hash first to handle all weird character cases too
-    # NOTE This still doesn't work - what happens when we hash ""? this leads to error: Count for type `section-header` should be: 3,  is: 0
-    sql_attr_query = "SELECT DISTINCT(MD5({0})) FROM SENTENCE WHERE SENTENCE_ID < " + str(end_index) + " AND SENTENCE_ID >= " + str( start_index) + ";"
+    sql_attr_query = "SELECT DISTINCT(MD5({0})), {0} FROM SENTENCE WHERE SENTENCE_ID < " + str(end_index) + " AND SENTENCE_ID >= " + str( start_index) + ";"
     for sql_attribute in sql_to_grakn_attributes:
 
         grakn_attribute_type = sql_to_grakn_attributes[sql_attribute]
@@ -134,7 +132,7 @@ def fetch_unique_attributes(mydb, start_index, end_index):
         cursor.execute(sql_query)
         unique_attributes = cursor.fetchall()
 
-        for unique_attribute in unique_attributes:
+        for unique_attribute_hash, unique_attribute in unique_attributes:
             attributes.append((grakn_attribute_type, unique_attribute))
 
     return attributes
@@ -146,7 +144,6 @@ def insert_attribute_queries(attribute_type_pairs):
     counter = 0
     for attr_type, attr_value in attribute_type_pairs:
         counter += 1
-        attr_value = attr_value[0]
         if type(attr_value) == str:
             attr_value = attr_value.replace('"', "'")
             queries.append('insert $x{2} "{0}" isa {1};'.format(attr_value, attr_type, counter))
